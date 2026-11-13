@@ -2,12 +2,13 @@
 
 import argparse
 from contextlib import contextmanager
+from dataclasses import replace
 from http.client import HTTPConnection
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from math import log
 from threading import Thread
 
-from .rollout import GRACE, ONSET, RULES, SCENARIOS, make_trace, replay, with_response
+from .rollout import GRACE, MIN_CANARY, ONSET, RULES, SCENARIOS, make_trace, replay, with_response
 
 
 DEMO_CUTOFFS = {"threshold": 0.20, "sequential": log(20)}
@@ -59,32 +60,58 @@ def request(port: int, path: str, version: str) -> tuple[int, int]:
         connection.close()
 
 
-def run(scenario: str, rule: str):
+def scripted_telemetry(trace, profile: str):
+    def retime(row):
+        if profile == "delayed" and row.canary:
+            delay = GRACE
+        elif profile == "timeout" and row.canary and row.block == ONSET and row.pair == 0:
+            delay = GRACE + 1
+        else:
+            delay = 0
+        return replace(row, available_at=row.block + delay)
+
+    return tuple(tuple(retime(row) for row in window) for window in trace)
+
+
+def run(scenario: str, rule: str, *, telemetry: str | None = None):
     trace = make_trace(scenario, seed=0, scripted=True)
+    if telemetry is not None:
+        trace = scripted_telemetry(trace, telemetry)
     control = (row for window in trace for row in window if not row.canary)
     canary = (row for window in trace for row in window if row.canary)
     onset = ONSET if scenario == "delayed-regression" else None
     cutoff = DEMO_CUTOFFS[rule]
     with service("control", control) as control_port, service("canary", canary) as canary_port:
-        print(f"{scenario} / {rule}: 90% control at 127.0.0.1:{control_port}, "
+        label = scenario if telemetry is None else f"{scenario} ({telemetry} telemetry)"
+        print(f"{label} / {rule}: 90% control at 127.0.0.1:{control_port}, "
               f"10% canary at 127.0.0.1:{canary_port}")
         print("Failures come from HTTP status; latency is scripted and not used for rollback.")
-        if onset is not None:
+        if telemetry is not None:
+            print(f"Telemetry timing is scripted. Windows close when complete or after {GRACE} ticks.")
+        elif onset is not None:
             print(f"Fault starts in window {onset}; its first canary outcomes arrive at tick {onset + GRACE}.")
 
         def dispatch(row):
             port, version = (canary_port, "canary") if row.canary else (control_port, "control")
             return with_response(row, *request(port, f"/request/{row.block}", version))
 
-        for decision in replay(trace, onset, dispatch):
+        for decision in replay(trace, onset, dispatch, complete_early=telemetry is not None):
             look = decision.look
-            if look.control + look.canary != len(trace[look.block]):
+            missing = len(trace[look.block]) - look.control - look.canary
+            if missing and telemetry is None:
                 raise RuntimeError(f"Incomplete telemetry for demo window {look.block}")
             rollback = decision.rollback(rule, cutoff)
+            reason = decision.reason(rule, cutoff)
+            if telemetry is not None:
+                if missing and min(look.control, look.canary) < MIN_CANARY:
+                    reason = f"telemetry deadline, {reason} ({missing} missing)"
+                availability = f"lag {look.at - look.block}, missing {missing} | "
+            else:
+                availability = ""
             print(f"tick {look.at:2d} | window {look.block:2d} | "
                   f"failures control {look.control_failures}/{look.control}, canary {look.canary_failures}/{look.canary} | "
                   f"slow {look.control_slow}/{look.canary_slow} (control/canary) | "
-                  f"{'ROLLBACK' if rollback else 'HOLD'}: {decision.reason(rule, cutoff)} | "
+                  f"{availability}{'ROLLBACK' if rollback else 'HOLD'}: {reason} | "
                   f"canary sent {look.sent_canary}, post-onset {look.exposed}")
             if rollback:
                 status, _ = request(control_port, "/probe", "control")
@@ -98,7 +125,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scenario", choices=(*SCENARIOS, "all"), default="all")
     parser.add_argument("--rule", choices=RULES, default="threshold")
+    parser.add_argument("--telemetry-stress", action="store_true",
+                        help="compare prompt, delayed and timed-out outcomes for the same scripted fault")
     args = parser.parse_args()
+    if args.telemetry_stress:
+        if args.scenario != "all":
+            parser.error("--telemetry-stress uses its own fixed scenario")
+        for profile in ("prompt", "delayed", "timeout"):
+            run("delayed-regression", args.rule, telemetry=profile)
+        return
     for scenario in SCENARIOS if args.scenario == "all" else (args.scenario,):
         run(scenario, args.rule)
 

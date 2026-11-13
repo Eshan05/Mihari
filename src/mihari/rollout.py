@@ -67,7 +67,8 @@ class Decision:
         return f"{label} {score:.3f} {'>' if score > cutoff else '<='} {cutoff:.3f}"
 
 
-def make_trace(scenario: str, seed: int, *, scripted: bool = False) -> tuple[tuple[Request, ...], ...]:
+def make_trace(scenario: str, seed: int, *, scripted: bool = False, increase: float = 0.19,
+               duration: int | None = None) -> tuple[tuple[Request, ...], ...]:
     """Assign one in ten requests to the canary before generating its outcome."""
     if scenario not in SCENARIOS:
         raise ValueError(f"Unknown scenario: {scenario}")
@@ -76,7 +77,8 @@ def make_trace(scenario: str, seed: int, *, scripted: bool = False) -> tuple[tup
     for block in range(LOOKS):
         groups = 4 if scripted else rng.randint(14, 26)
         shared = scenario == "shared-outage" and ONSET <= block < ONSET + 3
-        regressed = scenario == "delayed-regression" and block >= ONSET
+        regressed = (scenario == "delayed-regression" and block >= ONSET
+                     and (duration is None or block < ONSET + duration))
         # One shared rate per block creates bursts and within-block dependence.
         baseline = 0.01 + 0.015 * (block // 4) + rng.choice((0, 0, 0, 0.06))
         if shared:
@@ -88,7 +90,7 @@ def make_trace(scenario: str, seed: int, *, scripted: bool = False) -> tuple[tup
                 if scripted:
                     failed = (shared and pair == 0) or (regressed and canary)
                 else:
-                    failed = rng.random() < baseline + (0.19 if regressed and canary else 0)
+                    failed = rng.random() < baseline + (increase if regressed and canary else 0)
                 slow = failed or (not scripted and rng.random() < 0.04)
                 delay = GRACE if regressed and canary else 0 if scripted else rng.randrange(GRACE + 1)
                 rows.append(Request(block, canary, pair if slot < 2 else None, failed,
@@ -130,22 +132,29 @@ class Monitor:
         return Decision(look, threshold, self.llr)
 
 
-def replay(trace, onset: int | None = None, dispatch=None):
+def replay(trace, onset: int | None = None, dispatch=None, *,
+           complete_early: bool = False, fault_end: int | None = None):
     """Run the same monitor for simulated requests or actual loopback responses."""
     monitor = Monitor()
     sent_canary = exposed = 0
     received = []
+    block = 0
     for at in range(len(trace) + GRACE):
         if at < len(trace):
             rows = trace[at]
             received.append(tuple(dispatch(row) for row in rows) if dispatch else rows)
             count = sum(row.canary for row in rows)
             sent_canary += count
-            if onset is not None and at >= onset:
+            if onset is not None and at >= onset and (fault_end is None or at < fault_end):
                 exposed += count
-        if at >= GRACE:
-            block = at - GRACE
-            yield monitor.update(observe(received[block], block, at, sent_canary, exposed))
+        while block < len(received):
+            rows = received[block]
+            if at < block + GRACE and (not complete_early or any(
+                row.available_at is None or row.available_at > at for row in rows
+            )):
+                break
+            yield monitor.update(observe(rows, block, at, sent_canary, exposed))
+            block += 1
 
 
 def with_response(request: Request, status: int, latency_ms: int) -> Request:
