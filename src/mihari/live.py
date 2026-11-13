@@ -7,15 +7,18 @@ from http.client import HTTPConnection
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from math import log
 from threading import Thread
+from time import perf_counter_ns, sleep
 
-from .rollout import GRACE, MIN_CANARY, ONSET, RULES, SCENARIOS, make_trace, replay, with_response
+from . import guardrail
+from .rollout import GRACE, MIN_CANARY, ONSET, RULES, SCENARIOS, SLOW_MS, Request, make_trace, replay, with_response
 
 
 DEMO_CUTOFFS = {"threshold": 0.20, "sequential": log(20)}
+GUARDRAIL_DEMO_CUTOFF = 0.50
 
 
 @contextmanager
-def service(version: str, responses):
+def service(version: str, responses, *, inject_latency: bool = False):
     responses = iter(responses)
 
     class Handler(BaseHTTPRequestHandler):
@@ -28,9 +31,12 @@ def service(version: str, responses):
                     self.send_error(400)
                     return
                 status, latency = (503 if row.failed else 200), row.latency_ms
+                if inject_latency and latency:
+                    sleep(latency / 1000)
             self.send_response(status)
             self.send_header("X-Version", version)
-            self.send_header("X-Scripted-Latency-Ms", str(latency))
+            if not inject_latency:
+                self.send_header("X-Scripted-Latency-Ms", str(latency))
             self.send_header("Content-Length", "0")
             self.end_headers()
 
@@ -47,15 +53,21 @@ def service(version: str, responses):
             worker.join()
 
 
-def request(port: int, path: str, version: str) -> tuple[int, int]:
+def request(port: int, path: str, version: str, *, measure_latency: bool = False) -> tuple[int, int]:
     connection = HTTPConnection("127.0.0.1", port, timeout=2)
     try:
+        started = perf_counter_ns() if measure_latency else None
         connection.request("GET", path)
         response = connection.getresponse()
         response.read()
         if response.getheader("X-Version") != version or response.status not in (200, 503):
             raise RuntimeError(f"Unexpected response from the {version} demo service: {response.status}")
-        return response.status, int(response.getheader("X-Scripted-Latency-Ms"))
+        if started is not None:
+            # Round up so crossing 100 ms is still visible at integer resolution.
+            elapsed_ms = (perf_counter_ns() - started + 999_999) // 1_000_000
+        else:
+            elapsed_ms = int(response.getheader("X-Scripted-Latency-Ms"))
+        return response.status, elapsed_ms
     finally:
         connection.close()
 
@@ -121,13 +133,86 @@ def run(scenario: str, rule: str, *, telemetry: str | None = None):
     return None
 
 
+def guardrail_demo_trace(scenario: str):
+    trace = []
+    for block in range(ONSET + 3):
+        window = []
+        for slot in range(MIN_CANARY * 10):
+            canary = slot % 10 == 0
+            affected = canary and block >= ONSET
+            shared = scenario == "shared-degradation" and ONSET <= block < ONSET + 2 and slot < 10
+            failed = (shared or (scenario == "error-only" and affected)
+                      or (scenario == "timeout" and canary and block == ONSET))
+            slow = shared or (scenario == "latency-only" and affected)
+            lost = scenario == "timeout" and block == ONSET and slot == 0
+            window.append(Request(block, canary, None, failed, 175 if slow else 0,
+                                  block + (GRACE + 1 if lost else 0)))
+        trace.append(tuple(window))
+    return tuple(trace)
+
+
+def run_guardrail(scenario: str, rule: str):
+    trace = guardrail_demo_trace(scenario)
+    control = (row for window in trace for row in window if not row.canary)
+    canary = (row for window in trace for row in window if row.canary)
+    onset = None if scenario == "shared-degradation" else ONSET
+    with (service("control", control, inject_latency=True) as control_port,
+          service("canary", canary, inject_latency=True) as canary_port):
+        print(f"{scenario} / {rule}: 90% control at 127.0.0.1:{control_port}, "
+              f"10% canary at 127.0.0.1:{canary_port}")
+        print(f"Latency is measured by the HTTP client. Slow means greater than {SLOW_MS} ms.")
+
+        def dispatch(row):
+            port, version = (canary_port, "canary") if row.canary else (control_port, "control")
+            return with_response(row, *request(port, f"/request/{row.block}", version, measure_latency=True))
+
+        incomplete = 0
+        for scores in guardrail.decisions(trace, onset, dispatch):
+            look = scores.look
+            trigger = scores.trigger(rule, GUARDRAIL_DEMO_CUTOFF)
+            missing = len(trace[look.block]) - look.control - look.canary
+            if min(look.control, look.canary) < MIN_CANARY:
+                incomplete += 1
+                decision = f"HOLD: telemetry deadline, too few observed requests ({missing} missing)"
+            elif trigger is not None:
+                decision = f"ROLLBACK: {trigger}"
+            elif scores.errors is None:
+                decision = "HOLD: waiting for a second eligible window"
+            else:
+                decision = "HOLD: no enabled trigger crossed the cutoff"
+            print(f"tick {look.at:2d} | window {look.block:2d} | "
+                  f"HTTP 5xx control {look.control_failures}/{look.control}, canary {look.canary_failures}/{look.canary} | "
+                  f"slow control {look.control_slow}/{look.control}, canary {look.canary_slow}/{look.canary} | "
+                  f"{decision} | canary sent {look.sent_canary}, post-onset {look.exposed}")
+            if trigger is not None:
+                status, _ = request(control_port, "/probe", "control", measure_latency=True)
+                print(f"Canary traffic stopped. Follow-up uses control only: HTTP {status}.")
+                return scores
+        if incomplete:
+            print(f"No rollback; evidence was insufficient in {incomplete} window(s).")
+        else:
+            print("No rollback.")
+    return None
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scenario", choices=(*SCENARIOS, "all"), default="all")
     parser.add_argument("--rule", choices=RULES, default="threshold")
-    parser.add_argument("--telemetry-stress", action="store_true",
-                        help="compare prompt, delayed and timed-out outcomes for the same scripted fault")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--telemetry-stress", action="store_true",
+                      help="compare prompt, delayed and timed-out outcomes for the same scripted fault")
+    mode.add_argument("--joint-guardrail", action="store_true",
+                      help="run the error and measured-latency guardrail comparison")
     args = parser.parse_args()
+    if args.joint_guardrail:
+        if args.scenario != "all" or args.rule != "threshold":
+            parser.error("--joint-guardrail uses its own fixed scenarios and rules")
+        for scenario, rule in (("latency-only", "errors"), ("latency-only", "joint"),
+                               ("error-only", "joint"), ("shared-degradation", "joint"),
+                               ("timeout", "joint")):
+            run_guardrail(scenario, rule)
+        return
     if args.telemetry_stress:
         if args.scenario != "all":
             parser.error("--telemetry-stress uses its own fixed scenario")
