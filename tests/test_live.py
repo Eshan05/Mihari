@@ -71,3 +71,36 @@ def test_second_listener_failure_closes_first(monkeypatch):
         live.run("healthy", "threshold")
     with pytest.raises(OSError):
         live.request(ports[0], "/probe", "control")
+
+
+@pytest.mark.parametrize("rule", RULES)
+def test_live_stress_rolls_back_earlier_with_prompt_telemetry(rule, monkeypatch, capsys):
+    original = live.request
+    requests = []
+
+    def request(port, path, version):
+        status, latency = original(port, path, version)
+        requests.append((port, path, version, status))
+        return status, latency
+
+    monkeypatch.setattr(live, "request", request)
+    seen_rollbacks = []
+    sequences = []
+    for profile in ("prompt", "delayed", "timeout"):
+        stop = live.run("delayed-regression", rule, telemetry=profile)
+        seen_rollbacks.append((stop.at, stop.exposed))
+        output = capsys.readouterr().out
+        assert f"({profile} telemetry)" in output
+        assert requests[-1][1:] == ("/probe", "control", 200)
+        ports = {version: port for port, _, version, _ in requests}
+        assert len(set(ports.values())) == 2
+        for version, port in ports.items():
+            with pytest.raises(OSError):
+                original(port, "/probe", version)
+        sequences.append([entry[1:] for entry in requests[:-1]])
+        requests.clear()
+        if profile == "timeout":
+            line, = (line for line in output.splitlines() if "HOLD: telemetry deadline" in line)
+            assert "canary 3/3" in line and "lag 2, missing 1" in line
+    assert seen_rollbacks == [(ONSET + 1, 8), (ONSET + GRACE + 1, 16), (ONSET + GRACE, 12)]
+    assert sequences[0] == sequences[1][:len(sequences[0])] == sequences[2][:len(sequences[0])]

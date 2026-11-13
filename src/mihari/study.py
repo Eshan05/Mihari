@@ -1,6 +1,7 @@
 """Calibrate and compare rollback rules on disjoint, fixed-share rollouts."""
 
 import argparse
+from collections import defaultdict
 from math import ceil, sqrt
 from statistics import mean, median
 
@@ -18,18 +19,23 @@ def traces(scenario: str, trials: int, *, holdout: bool):
                            ONSET if scenario == "delayed-regression" else None))
 
 
-def calibrate(trials: int):
+def calibrate_groups(labelled_traces, trials: int):
+    """Find a single cutoff per rule that meets the target in each calibration group."""
     cutoffs = dict.fromkeys(RULES, 0.0)
-    for scenario in SCENARIOS[:2]:
-        peaks = {rule: [] for rule in RULES}
-        for trace in traces(scenario, trials, holdout=False):
-            for rule in RULES:
-                scores = [score for decision in trace if (score := decision.score(rule)) is not None]
-                peaks[rule].append(max(scores, default=float("-inf")))
-        rank = ceil((1 - TARGET) * trials) - 1
+    rank = ceil((1 - TARGET) * trials) - 1
+    peaks = defaultdict(list)
+    for group, trace in labelled_traces:
         for rule in RULES:
-            cutoffs[rule] = max(cutoffs[rule], sorted(peaks[rule])[rank])
+            scores = (score for decision in trace if (score := decision.score(rule)) is not None)
+            peaks[group, rule].append(max(scores, default=float("-inf")))
+    for (_, rule), values in peaks.items():
+        cutoffs[rule] = max(cutoffs[rule], sorted(values)[rank])
     return cutoffs
+
+
+def calibrate(trials: int):
+    return calibrate_groups(((scenario, trace) for scenario in SCENARIOS[:2]
+                             for trace in traces(scenario, trials, holdout=False)), trials)
 
 
 def wilson(count: int, total: int):

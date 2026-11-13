@@ -15,6 +15,8 @@ The demo routes 90% of requests to control and 10% to canary on two local HTTP p
 
 The [fixed-share study](docs/fixed-exposure.md) compares both rules on held-out traffic. It reports false rollbacks against a 5% target, missed regressions, time to rollback, and canary requests exposed while waiting. The two rules do not necessarily achieve the same false-rollback rate.
 
+The [telemetry stress study](docs/telemetry-stress.md) replays identical traffic with prompt and late outcomes for weaker and shorter faults. Run `python -m mihari.stress` for the comparison and `python -m mihari.live --telemetry-stress` to see it over local HTTP.
+
 ## Original benchmark
 Baseline error rate 2%, 500 requests per arm per look, up to 20 looks, 20,000 simulated rollouts per cell, one-sided alpha 0.05. Rules: fixed horizon (test once at the end), naive peeking (z > 1.645 at every look), a constant boundary and an O'Brien-Fleming-style boundary (both calibrated by simulation on separate runs to 5% false rollbacks), an always-valid mixture SPRT, and an SPRT against a known baseline.
 
