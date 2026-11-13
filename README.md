@@ -17,6 +17,8 @@ The [fixed-share study](docs/fixed-exposure.md) compares both rules on held-out 
 
 The [telemetry stress study](docs/telemetry-stress.md) replays identical traffic with prompt and late outcomes for weaker and shorter faults. Run `python -m mihari.stress` for the comparison and `python -m mihari.live --telemetry-stress` to see it over local HTTP.
 
+The [joint guardrail study](docs/joint-guardrail.md) tests whether slow requests should trigger rollback alongside failures. Run `python -m mihari.guardrail` for the study or `python -m mihari.live --joint-guardrail` for the demo with measured HTTP latency.
+
 ## Original benchmark
 Baseline error rate 2%, 500 requests per arm per look, up to 20 looks, 20,000 simulated rollouts per cell, one-sided alpha 0.05. Rules: fixed horizon (test once at the end), naive peeking (z > 1.645 at every look), a constant boundary and an O'Brien-Fleming-style boundary (both calibrated by simulation on separate runs to 5% false rollbacks), an always-valid mixture SPRT, and an SPRT against a known baseline.
 

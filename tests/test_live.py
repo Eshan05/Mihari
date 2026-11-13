@@ -1,10 +1,11 @@
 from collections import Counter
+from contextlib import contextmanager
 from dataclasses import replace
 
 import pytest
 
 from mihari import live
-from mihari.rollout import GRACE, ONSET, RULES, SCENARIOS
+from mihari.rollout import GRACE, ONSET, RULES, SCENARIOS, SLOW_MS
 
 
 @pytest.mark.parametrize("scenario", SCENARIOS)
@@ -104,3 +105,69 @@ def test_live_stress_rolls_back_earlier_with_prompt_telemetry(rule, monkeypatch,
             assert "canary 3/3" in line and "lag 2, missing 1" in line
     assert seen_rollbacks == [(ONSET + 1, 8), (ONSET + GRACE + 1, 16), (ONSET + GRACE, 12)]
     assert sequences[0] == sequences[1][:len(sequences[0])] == sequences[2][:len(sequences[0])]
+
+
+@pytest.mark.parametrize(("scenario", "rule", "trigger"), [
+    ("latency-only", "errors", None),
+    ("latency-only", "joint", "latency"),
+    ("error-only", "joint", "errors"),
+    ("shared-degradation", "joint", None),
+    ("timeout", "joint", None),
+])
+def test_joint_guardrail_live_uses_observed_http_metrics(scenario, rule, trigger, monkeypatch, capsys):
+    records = []
+    original = live.request
+
+    def request(port, path, version, *, measure_latency=False):
+        assert measure_latency
+        status, elapsed = original(port, path, version, measure_latency=measure_latency)
+        records.append((port, path, version, status, elapsed))
+        return status, elapsed
+
+    monkeypatch.setattr(live, "request", request)
+    scores = live.run_guardrail(scenario, rule)
+    output = capsys.readouterr().out
+    ports = {version: port for port, _, version, _, _ in records}
+    assert set(ports) == {"control", "canary"} and len(set(ports.values())) == 2
+    assert "HTTP client" in output and "90% control" in output and "10% canary" in output
+    if scenario == "latency-only":
+        assert all(status == 200 for _, _, _, status, _ in records)
+        affected = [elapsed for _, path, version, _, elapsed in records
+                    if path == f"/request/{ONSET}" and version == "canary"]
+        assert len(affected) == 4 and min(affected) > SLOW_MS
+    if scenario == "timeout":
+        assert "HOLD: telemetry deadline, too few observed requests (1 missing)" in output
+        assert "No rollback; evidence was insufficient" in output
+    if trigger:
+        assert scores.trigger(rule, live.GUARDRAIL_DEMO_CUTOFF) == trigger
+        assert f"ROLLBACK: {trigger}" in output
+        assert records[-1][1:4] == ("/probe", "control", 200)
+    else:
+        assert scores is None and "No rollback" in output
+    for version, port in ports.items():
+        with pytest.raises(OSError):
+            original(port, "/probe", version, measure_latency=True)
+
+
+def test_joint_guardrail_closes_both_listeners_when_request_fails(monkeypatch):
+    service = live.service
+    request = live.request
+    ports = {}
+
+    @contextmanager
+    def listening(version, responses, **options):
+        with service(version, responses, **options) as port:
+            ports[version] = port
+            yield port
+
+    def disconnected(*args, **kwargs):
+        raise RuntimeError("test transport failure")
+
+    monkeypatch.setattr(live, "service", listening)
+    monkeypatch.setattr(live, "request", disconnected)
+    with pytest.raises(RuntimeError, match="transport failure"):
+        live.run_guardrail("latency-only", "joint")
+    assert set(ports) == {"control", "canary"}
+    for version, port in ports.items():
+        with pytest.raises(OSError):
+            request(port, "/probe", version, measure_latency=True)
