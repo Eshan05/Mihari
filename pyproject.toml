@@ -2,7 +2,7 @@
 name = "mihari"
 version = "0.1.0"
 requires-python = ">=3.10"
-dependencies = ["numpy", "scikit-learn", "torch"]
+dependencies = ["numpy", "scipy"]
 [project.optional-dependencies]
 dev = ["pytest"]
 [build-system]
