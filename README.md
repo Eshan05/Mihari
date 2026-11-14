@@ -19,6 +19,8 @@ The [telemetry stress study](docs/telemetry-stress.md) replays identical traffic
 
 The [joint guardrail study](docs/joint-guardrail.md) tests whether slow requests should trigger rollback alongside failures. Run `python -m mihari.guardrail` for the study or `python -m mihari.live --joint-guardrail` for the demo with measured HTTP latency.
 
+The [matched-risk study](docs/matched-risk.md) checks whether the two guardrail rules actually have similar false-rollback rates before comparing fault detection. Run `python -m mihari.matched_risk` for the frozen benchmark.
+
 ## Original benchmark
 Baseline error rate 2%, 500 requests per arm per look, up to 20 looks, 20,000 simulated rollouts per cell, one-sided alpha 0.05. Rules: fixed horizon (test once at the end), naive peeking (z > 1.645 at every look), a constant boundary and an O'Brien-Fleming-style boundary (both calibrated by simulation on separate runs to 5% false rollbacks), an always-valid mixture SPRT, and an SPRT against a known baseline.
 
