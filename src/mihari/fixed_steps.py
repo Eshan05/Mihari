@@ -71,6 +71,15 @@ def harm(scenario: str, share: int) -> tuple[float, float]:
     return 0.0, 0.0
 
 
+def control_rates(scenario: str, load: float) -> tuple[float, float]:
+    errors, slow = (0.13, 0.25) if scenario == "shared-degradation" else (0.02, 0.05)
+    return errors + load, slow + load
+
+
+def late_canary_count(scenario: str, share: int, block: int) -> int:
+    return int(scenario == "missing-telemetry" and share == SHARES[0] and block == WINDOWS - 1)
+
+
 def sample_arm(rng: Generator, sent: int, late: int, errors: float, slow: float, *, scripted: bool) -> Arm:
     seen = sent - late
     if scripted:
@@ -85,12 +94,12 @@ def sample_arm(rng: Generator, sent: int, late: int, errors: float, slow: float,
 def sample_window(scenario: str, share: int, block: int, rng: Generator, *, scripted: bool) -> Evidence:
     canary = REQUESTS * share // 100
     load = 0.0 if scripted else float(rng.choice((0.0, 0.0, 0.01, 0.025)))
-    control_error, control_slow = (0.13, 0.25) if scenario == "shared-degradation" else (0.02, 0.05)
+    control_error, control_slow = control_rates(scenario, load)
     extra_error, extra_slow = harm(scenario, share)
-    late = int(scenario == "missing-telemetry" and share == SHARES[0] and block == WINDOWS - 1)
+    late = late_canary_count(scenario, share, block)
     return Evidence(
-        sample_arm(rng, REQUESTS - canary, 0, control_error + load, control_slow + load, scripted=scripted),
-        sample_arm(rng, canary, late, control_error + load + extra_error, control_slow + load + extra_slow,
+        sample_arm(rng, REQUESTS - canary, 0, control_error, control_slow, scripted=scripted),
+        sample_arm(rng, canary, late, control_error + extra_error, control_slow + extra_slow,
                    scripted=scripted),
     )
 
@@ -102,26 +111,33 @@ def upper_difference(canary_hits: int, canary_n: int, control_hits: int, control
     return float(upper - lower)
 
 
+def upper_harm(evidence: Evidence) -> tuple[float, float]:
+    control, canary = evidence.control, evidence.canary
+    return (upper_difference(canary.errors, canary.seen, control.errors, control.seen),
+            upper_difference(canary.slow, canary.seen, control.slow, control.seen))
+
+
 def checkpoint(evidence: Evidence, *, final: bool) -> tuple[str, str]:
     control, canary = evidence.control, evidence.canary
     if min(control.seen, canary.seen) == 0 or control.seen != control.sent or canary.seen != canary.sent:
         return "HOLD", "incomplete on-time telemetry at checkpoint"
     if control.errors / control.seen > CONTROL_ERROR_CAP or control.slow / control.seen > CONTROL_SLOW_CAP:
         return "HOLD", "control is degraded at checkpoint"
-    error = upper_difference(canary.errors, canary.seen, control.errors, control.seen)
-    slow = upper_difference(canary.slow, canary.seen, control.slow, control.seen)
+    error, slow = upper_harm(evidence)
     bounds = f"upper harm: errors {100 * error:+.2f} pp, slow {100 * slow:+.2f} pp"
     if error >= ERROR_MARGIN or slow >= SLOW_MARGIN:
         return "HOLD", f"harm limits not established ({bounds})"
     return ("PROMOTE" if final else "ADVANCE"), f"both harm bounds pass ({bounds})"
 
 
-def timeline(scenario: str, seed: int, *, scripted: bool = False):
+def timeline(scenario: str, seed: int, *, scripted: bool = False, window_source=None, choose_middle=None):
     if scenario not in SCENARIOS:
         raise ValueError(f"Unknown rollout scenario: {scenario}")
     rng = default_rng(seed)
     tick = cumulative_canary = faulty_canary = 0
-    for share in SHARES:
+    middle = SHARES[1]
+    for index, scheduled in enumerate(SHARES):
+        share = middle if index == 1 else scheduled
         pending = []
         stage = Evidence()
         guardrail = Guardrail()
@@ -132,7 +148,8 @@ def timeline(scenario: str, seed: int, *, scripted: bool = False):
             if draining:
                 sent_control, sent_canary = REQUESTS, 0
             else:
-                window = sample_window(scenario, share, offset, rng, scripted=scripted)
+                window = (sample_window(scenario, share, offset, rng, scripted=scripted)
+                          if window_source is None else window_source(share, offset, tick))
                 pending.append(window)
                 sent_control, sent_canary = window.control.sent, window.canary.sent
             cumulative_canary += sent_canary
@@ -158,6 +175,10 @@ def timeline(scenario: str, seed: int, *, scripted: bool = False):
             elif offset == WINDOWS + GRACE - 1:
                 action, reason = checkpoint(stage, final=share == SHARES[-1])
                 terminal = action != "ADVANCE"
+                if index == 0 and action == "ADVANCE" and choose_middle is not None:
+                    middle = choose_middle(stage)
+                    if not SHARES[0] < middle < SHARES[-1]:
+                        raise ValueError("Middle share must stay between the first and final shares")
 
             yield Event(tick, share, sent_control, sent_canary, stage, action, reason, terminal,
                         harmful and action in ("ADVANCE", "PROMOTE"), cumulative_canary, faulty_canary)
