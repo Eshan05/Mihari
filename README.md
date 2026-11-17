@@ -27,6 +27,8 @@ The [fixed-step simulator](docs/fixed-steps.md) makes separate hold, advance, pr
 
 The [adaptive-share study](docs/adaptive-steps.md) changes just the middle traffic share and compares both schedules on paired requests. Run `python -m mihari.adaptive_steps --timeline all` for a side-by-side example.
 
+The [staged-risk study](docs/staged-risk.md) compares those same schedules on a slowdown that starts at the same tick and one that starts only at higher traffic shares. Run `python -m mihari.staged_risk --timeline` to see why the distinction matters.
+
 The [recorded-trace replay](docs/recorded-traces.md) applies the latency guardrail to six Online Boutique testbed recordings, first unchanged and then with a modeled canary slowdown. It uses recorded durations, not actual deployment labels.
 
 ## Original benchmark
