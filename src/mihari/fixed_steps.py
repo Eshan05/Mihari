@@ -130,9 +130,12 @@ def checkpoint(evidence: Evidence, *, final: bool) -> tuple[str, str]:
     return ("PROMOTE" if final else "ADVANCE"), f"both harm bounds pass ({bounds})"
 
 
-def timeline(scenario: str, seed: int, *, scripted: bool = False, window_source=None, choose_middle=None):
+def timeline(scenario: str, seed: int, *, scripted: bool = False, window_source=None,
+             choose_middle=None, stage_harm=None):
     if scenario not in SCENARIOS:
         raise ValueError(f"Unknown rollout scenario: {scenario}")
+    if stage_harm is not None and window_source is None:
+        raise ValueError("Custom stage harm requires a matching window source")
     rng = default_rng(seed)
     tick = cumulative_canary = faulty_canary = 0
     middle = SHARES[1]
@@ -141,7 +144,7 @@ def timeline(scenario: str, seed: int, *, scripted: bool = False, window_source=
         pending = []
         stage = Evidence()
         guardrail = Guardrail()
-        errors, slow = harm(scenario, share)
+        errors, slow = harm(scenario, share) if stage_harm is None else stage_harm(share, tick)
         harmful = errors >= ERROR_MARGIN or slow >= SLOW_MARGIN
         for offset in range(WINDOWS + GRACE):
             draining = offset >= WINDOWS
