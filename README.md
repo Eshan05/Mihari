@@ -23,6 +23,8 @@ The [matched-risk study](docs/matched-risk.md) checks whether the two guardrail 
 
 The [fixed-step simulator](docs/fixed-steps.md) makes separate hold, advance, promote, and rollback decisions at 10%, 25%, and 50% canary traffic. Run `python -m mihari.fixed_steps --timeline all` to see the decisions.
 
+The [adaptive-share study](docs/adaptive-steps.md) changes just the middle traffic share and compares both schedules on paired requests. Run `python -m mihari.adaptive_steps --timeline all` for a side-by-side example.
+
 ## Original benchmark
 Baseline error rate 2%, 500 requests per arm per look, up to 20 looks, 20,000 simulated rollouts per cell, one-sided alpha 0.05. Rules: fixed horizon (test once at the end), naive peeking (z > 1.645 at every look), a constant boundary and an O'Brien-Fleming-style boundary (both calibrated by simulation on separate runs to 5% false rollbacks), an always-valid mixture SPRT, and an SPRT against a known baseline.
 
