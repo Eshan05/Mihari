@@ -62,7 +62,8 @@ def decisions(trace, onset: int | None = None, dispatch=None):
         yield guard.update(decision.look)
 
 
-def make_workload(scenario: str, seed: int):
+def make_workload(scenario: str, seed: int, *, on_canary=None):
+    """Optionally report each canary request and its same-draw control outcomes."""
     if scenario not in (*NULLS, *FAULTS):
         raise ValueError(f"Unknown guardrail scenario: {scenario}")
     rng = Random(seed)
@@ -83,8 +84,11 @@ def make_workload(scenario: str, seed: int):
             # A shared draw sometimes correlates the outcomes without tying their marginals.
             slow_draw = error_draw if rng.random() < 0.55 else rng.random()
             available = block + rng.choice((0, 0, 1, 1, GRACE, GRACE + 1))
-            window.append(Request(block, canary, None, error_draw < errors,
-                                  170 if slow_draw < slow else 25, available))
+            request = Request(block, canary, None, error_draw < errors,
+                              170 if slow_draw < slow else 25, available)
+            window.append(request)
+            if on_canary is not None and canary:
+                on_canary(request, error_draw < baseline_errors, slow_draw < baseline_slow)
         trace.append(tuple(window))
     return tuple(trace)
 
