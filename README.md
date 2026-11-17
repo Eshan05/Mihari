@@ -21,6 +21,8 @@ The [joint guardrail study](docs/joint-guardrail.md) tests whether slow requests
 
 The [matched-risk study](docs/matched-risk.md) checks whether the two guardrail rules actually have similar false-rollback rates before comparing fault detection. Run `python -m mihari.matched_risk` for the frozen benchmark.
 
+The [risk confirmation](docs/risk-confirmation.md) reruns that comparison on a fresh, larger sample without changing either cutoff or the matching margin. Run `python -m mihari.risk_confirmation`.
+
 The [fixed-step simulator](docs/fixed-steps.md) makes separate hold, advance, promote, and rollback decisions at 10%, 25%, and 50% canary traffic. Run `python -m mihari.fixed_steps --timeline all` to see the decisions.
 
 The [adaptive-share study](docs/adaptive-steps.md) changes just the middle traffic share and compares both schedules on paired requests. Run `python -m mihari.adaptive_steps --timeline all` for a side-by-side example.
