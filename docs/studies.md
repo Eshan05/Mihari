@@ -25,6 +25,8 @@ The [matched-risk study](matched-risk.md) checks whether the two guardrail rules
 
 The [risk confirmation](risk-confirmation.md) reruns that comparison on a fresh, larger sample without changing either cutoff or the matching margin. Run `python -m mihari.risk_confirmation`.
 
+The [rollout impact study](rollout-impact.md) counts extra failures and slow responses on that same cohort, then varies what an unnecessary rollback costs. Run `python -m mihari.impact`.
+
 ## Staged rollouts
 
 The [fixed-step simulator](fixed-steps.md) makes separate hold, advance, promote, and rollback decisions at 10%, 25%, and 50% canary traffic. Run `python -m mihari.fixed_steps --timeline all` to see the decisions.
