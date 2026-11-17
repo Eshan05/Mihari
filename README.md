@@ -33,6 +33,8 @@ The [recorded-trace replay](docs/recorded-traces.md) applies the latency guardra
 
 The [regional guardrail study](docs/regional-guardrail.md) tests what happens when the canary gets more traffic from a struggling region. Run `python -m mihari.regional_guardrail --timeline` to see how the two comparisons handle the outage and missing regional evidence.
 
+The [regional risk study](docs/regional-risk.md) tests whether an explicit regional trigger preserves local sensitivity when the overall and regional checks share one false-rollback budget.
+
 ## Original benchmark
 Baseline error rate 2%, 500 requests per arm per look, up to 20 looks, 20,000 simulated rollouts per cell, one-sided alpha 0.05. Rules: fixed horizon (test once at the end), naive peeking (z > 1.645 at every look), a constant boundary and an O'Brien-Fleming-style boundary (both calibrated by simulation on separate runs to 5% false rollbacks), an always-valid mixture SPRT, and an SPRT against a known baseline.
 
