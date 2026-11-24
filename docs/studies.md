@@ -43,6 +43,8 @@ The [regional guardrail study](regional-guardrail.md) tests what happens when th
 
 The [regional risk study](regional-risk.md) tests whether an explicit regional trigger preserves local sensitivity when the overall and regional checks share one false-rollback budget.
 
+The [regional precision study](regional-precision.md) adjusts for unequal sample sizes and checks the same risk margin on a fresh holdout. Run `python -m mihari.regional_precision --timeline` to see the fitted decisions.
+
 ## Original benchmark
 Baseline error rate 2%, 500 requests per arm per look, up to 20 looks, 20,000 simulated rollouts per cell, one-sided alpha 0.05. Rules: fixed horizon (test once at the end), naive peeking (z > 1.645 at every look), a constant boundary and an O'Brien-Fleming-style boundary (both calibrated by simulation on separate runs to 5% false rollbacks), an always-valid mixture SPRT, and an SPRT against a known baseline.
 
