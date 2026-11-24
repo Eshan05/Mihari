@@ -29,6 +29,8 @@ The [rollout impact study](rollout-impact.md) counts extra failures and slow res
 
 The [clustered-request study](clustered-requests.md) holds the number of checks at one and compares request- and tenant-level inference when retry-like bursts make outcomes dependent. Run `python -m mihari.clustered_requests --example` to see both decisions on the same healthy rollout.
 
+The [clustered-looks study](clustered-looks.md) crosses that comparison with repeated checking and a split false-rollback budget. Run `python -m mihari.clustered_looks --example` to see why fixing the checking schedule alone does not fix the assignment unit.
+
 ## Staged rollouts
 
 The [fixed-step simulator](fixed-steps.md) makes separate hold, advance, promote, and rollback decisions at 10%, 25%, and 50% canary traffic. Run `python -m mihari.fixed_steps --timeline all` to see the decisions.

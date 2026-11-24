@@ -24,27 +24,39 @@ FIRST_SEED = 1_210_000
 ASSIGNMENTS = np.array(list(combinations(range(TENANTS), CANARY_TENANTS)), dtype=np.intp)
 
 
-def sample(seed: int, *, bursts: bool, fault: bool) -> tuple[np.ndarray, np.ndarray]:
+def draw_blocks(seed: int, *, bursts: bool, fault: bool, blocks: int) -> tuple[np.ndarray, np.ndarray]:
     rng = default_rng(seed)
     canary = rng.choice(TENANTS, CANARY_TENANTS, replace=False)
     rates = np.full((TENANTS, 1), BASE_ERROR)
     if fault:
         rates[canary] = FAULT_ERROR
-    failed_attempts = rng.binomial(ATTEMPTS, rates, size=(TENANTS, BLOCKS))
+    shape = (TENANTS, blocks)
+    failed_attempts = rng.binomial(ATTEMPTS, rates, size=shape)
     if bursts:
-        shared = rng.random((TENANTS, BLOCKS)) < BURST_CHANCE
-        all_or_none = ATTEMPTS * rng.binomial(1, rates, size=(TENANTS, BLOCKS))
+        shared = rng.random(shape) < BURST_CHANCE
+        all_or_none = ATTEMPTS * rng.binomial(1, rates, size=shape)
         failed_attempts = np.where(shared, all_or_none, failed_attempts)
-    return failed_attempts.sum(axis=1), canary
+    return failed_attempts, canary
+
+
+def sample(seed: int, *, bursts: bool, fault: bool) -> tuple[np.ndarray, np.ndarray]:
+    blocks, canary = draw_blocks(seed, bursts=bursts, fault=fault, blocks=BLOCKS)
+    return blocks.sum(axis=1), canary
+
+
+def assignment_p_values(errors: np.ndarray, canary: np.ndarray,
+                        requests_per_tenant: int | np.ndarray):
+    """Evaluate the same error-rate contrast under two assignment assumptions."""
+    observed = errors[canary].sum(axis=0)
+    request_p = hypergeom.sf(observed - 1, TENANTS * requests_per_tenant, errors.sum(axis=0),
+                             CANARY_TENANTS * requests_per_tenant)
+    # Equal tenant volumes make the rate gap monotone in the canary error count.
+    tenant_p = np.mean(errors[ASSIGNMENTS].sum(axis=1) >= observed, axis=0)
+    return request_p, tenant_p
 
 
 def p_values(errors: np.ndarray, canary: np.ndarray) -> tuple[float, float]:
-    """Evaluate the same error-rate contrast under two assignment assumptions."""
-    observed = errors[canary].sum()
-    request_p = hypergeom.sf(observed - 1, TENANTS * REQUESTS, errors.sum(),
-                             CANARY_TENANTS * REQUESTS)
-    # Equal tenant volumes make the rate gap monotone in the canary error count.
-    tenant_p = np.mean(errors[ASSIGNMENTS].sum(axis=1) >= observed)
+    request_p, tenant_p = assignment_p_values(errors, canary, REQUESTS)
     return float(request_p), float(tenant_p)
 
 
