@@ -27,6 +27,8 @@ The [risk confirmation](risk-confirmation.md) reruns that comparison on a fresh,
 
 The [rollout impact study](rollout-impact.md) counts extra failures and slow responses on that same cohort, then varies what an unnecessary rollback costs. Run `python -m mihari.impact`.
 
+The [clustered-request study](clustered-requests.md) holds the number of checks at one and compares request- and tenant-level inference when retry-like bursts make outcomes dependent. Run `python -m mihari.clustered_requests --example` to see both decisions on the same healthy rollout.
+
 ## Staged rollouts
 
 The [fixed-step simulator](fixed-steps.md) makes separate hold, advance, promote, and rollback decisions at 10%, 25%, and 50% canary traffic. Run `python -m mihari.fixed_steps --timeline all` to see the decisions.

@@ -23,6 +23,9 @@ too few outcomes arrive by the simulated telemetry deadline.
 - [Repeated checks raise false alarms.](docs/studies.md#original-benchmark)
   At 20 looks, naive peeking rolled back 21.5% of healthy runs in the original
   benchmark, versus 5.1% for one planned test.
+- [Correlated requests can cause false rollbacks even at one check.](docs/clustered-requests.md)
+  With retry-like bursts and identical versions, the request-level rule
+  rolled back 16.5% of runs; the tenant-level rule rolled back 4.0%.
 - [Latency and error triggers trade off.](docs/risk-confirmation.md)
   At comparable modeled false-rollback risk, the joint rule caught more
   latency-only and combined faults. The error-only rule caught more
