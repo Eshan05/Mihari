@@ -49,6 +49,10 @@ The [regional precision study](regional-precision.md) adjusts for unequal sample
 
 The [Lindon adjustment study](lindon-adjustment.md) tests whether a pre-routing attribute helps detect canary latency regressions sooner on the same randomized traffic. Run `python -m mihari.lindon_adjustment --timeline` for the side-by-side decision trace.
 
+## State-space allocation
+
+The [Shao allocation study](shao-allocation.md) separates adaptive routing from Kalman smoothing and tests both under a sudden model-breaking slowdown. Run `python -m mihari.shao_allocation --timeline` for the allocation trace.
+
 ## Original benchmark
 Baseline error rate 2%, 500 requests per arm per look, up to 20 looks, 20,000 simulated rollouts per cell, one-sided alpha 0.05. Rules: fixed horizon (test once at the end), naive peeking (z > 1.645 at every look), a constant boundary and an O'Brien-Fleming-style boundary (both calibrated by simulation on separate runs to 5% false rollbacks), an always-valid mixture SPRT, and an SPRT against a known baseline.
 
