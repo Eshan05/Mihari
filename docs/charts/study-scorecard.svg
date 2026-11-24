@@ -1,0 +1,201 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="1701" viewBox="0 0 600 1701" role="img" aria-labelledby="scorecard-title scorecard-desc">
+  <title id="scorecard-title">Mihari: one result from each of 15 studies</title>
+  <desc id="scorecard-desc">Fixed-share rollback: Healthy false rollbacks: threshold to sequential; 0.3% &#8594; 4.2%; lower is better. Telemetry stress: Weak faults caught, sequential rule: prompt to late; 84 &#8594; 76; higher is better. Joint guardrail: Combined faults caught: errors to errors + latency; 78.8% &#8594; 95.6%; higher is better. Initial risk matching: Outage false stops: errors to joint; match inconclusive; 5.1% &#8594; 4.7%; lower is better. Risk confirmation: Latency faults: errors to joint at comparable risk; 28 &#8594; 2,791; higher is better. Rollout impact: Added slows per latency fault: errors to joint; 30.189 &#8594; 20.682; lower is better. Fixed-step rollout: Healthy runs promoted; baseline capability; 152 / 200; higher is better. Adaptive middle stage: Healthy runs promoted: fixed to adaptive; 154 &#8594; 155; higher is better. Staged risk: Share-triggered exposure: fixed to adaptive; 768.8 &#8594; 1,011.8; lower is better. Recorded-trace replay: Modeled slowdowns caught on recorded timings; 6 / 6; higher is better. Regional traffic mix: Skewed outage, no false stop: pooled to adjusted; 673 &#8594; 2,000; higher is better. Regional triggers: Local faults: overall to joint; risk not matched; 993 &#8594; 2,867; higher is better. Regional precision: Local faults: overall to joint at comparable risk; 1,041 &#8594; 2,933; higher is better. Lindon adjustment: Predictive attribute: mean looks, unadjusted to adjusted; 14.19 &#8594; 2.63; lower is better. Shao state-space: RMSE after sudden shift: plain to smoothed; 1.777 &#8594; 9.183 ms; lower is better.</desc>
+  <style>
+    svg { --surface:#fff; --ink:#172235; --muted:#4d596b; --grid:#d6dee9; --track:#e7edf4; --series:#245cdc; --joint:#a84315; }
+    @media (prefers-color-scheme: dark) {
+      svg { --surface:#141a24; --ink:#f3f6fb; --muted:#b9c6d8; --grid:#435065; --track:#2b3749; --series:#83aaff; --joint:#ffad78; }
+    }
+    text { font-family: system-ui, "Segoe UI", sans-serif; fill:var(--ink); font-variant-numeric:tabular-nums; }
+    .heading { font-size:29px; font-weight:700; }
+    .category { font-size:23px; font-weight:650; }
+    .number { font-size:22px; font-weight:650; }
+    .note { font-size:19px; fill:var(--muted); }
+    .axis { font-size:18px; fill:var(--muted); }
+    .direction { font-size:19px; font-weight:600; }
+    .surface { fill:var(--surface); }
+    .grid { stroke:var(--grid); stroke-width:1; }
+    .marker { stroke:var(--ink); stroke-width:3; }
+    .track { fill:var(--track); }
+    .series { fill:var(--series); }
+    .joint { fill:var(--joint); }
+  </style>
+  <rect x="0" y="0" width="600" height="1701" rx="8" class="surface"/>
+  <text x="24" y="43" class="heading">Mihari: 15 study results</text>
+  <text x="24" y="73" class="note">One metric and scale per row. Bars are not rankings.</text>
+  <rect x="24" y="92" width="16" height="12" rx="3" class="series"/>
+  <text x="48" y="104" class="note">Study result</text>
+  <line x1="217" y1="90" x2="217" y2="106" class="marker"/>
+  <text x="229" y="104" class="note">Comparator, where available</text>
+  <text x="24" y="147" class="category">Rollback and impact</text>
+  <line x1="24" y1="158" x2="576" y2="158" class="grid"/>
+  <text x="24" y="188" class="axis">01</text>
+  <text x="57" y="189" class="category">Fixed-share rollback</text>
+  <text x="576" y="189" class="number" text-anchor="end">0.3% &#8594; 4.2%</text>
+  <text x="24" y="216" class="note">Healthy false rollbacks: threshold to sequential</text>
+  <text x="24" y="243" class="direction">Lower is better</text>
+  <text x="179" y="243" class="axis">0</text>
+  <rect x="200" y="231" width="237" height="12" rx="3" class="track"/>
+  <rect x="200" y="231" width="199.08" height="12" rx="3" class="series"/>
+  <line x1="214.22" y1="228" x2="214.22" y2="246" class="marker"/>
+  <text x="576" y="243" class="axis" text-anchor="end">5%</text>
+  <line x1="24" y1="255" x2="576" y2="255" class="grid"/>
+  <text x="24" y="280" class="axis">02</text>
+  <text x="57" y="281" class="category">Telemetry stress</text>
+  <text x="576" y="281" class="number" text-anchor="end">84 &#8594; 76</text>
+  <text x="24" y="308" class="note">Weak faults caught, sequential rule: prompt to late</text>
+  <text x="24" y="335" class="direction">Higher is better</text>
+  <text x="179" y="335" class="axis">0</text>
+  <rect x="200" y="323" width="237" height="12" rx="3" class="track"/>
+  <rect x="200" y="323" width="36.024" height="12" rx="3" class="series"/>
+  <line x1="239.816" y1="320" x2="239.816" y2="338" class="marker"/>
+  <text x="576" y="335" class="axis" text-anchor="end">500 trials</text>
+  <line x1="24" y1="347" x2="576" y2="347" class="grid"/>
+  <text x="24" y="372" class="axis">03</text>
+  <text x="57" y="373" class="category">Joint guardrail</text>
+  <text x="576" y="373" class="number" text-anchor="end">78.8% &#8594; 95.6%</text>
+  <text x="24" y="400" class="note">Combined faults caught: errors to errors + latency</text>
+  <text x="24" y="427" class="direction">Higher is better</text>
+  <text x="179" y="427" class="axis">0</text>
+  <rect x="200" y="415" width="237" height="12" rx="3" class="track"/>
+  <rect x="200" y="415" width="226.572" height="12" rx="3" class="series"/>
+  <line x1="386.756" y1="412" x2="386.756" y2="430" class="marker"/>
+  <text x="576" y="427" class="axis" text-anchor="end">100%</text>
+  <line x1="24" y1="439" x2="576" y2="439" class="grid"/>
+  <text x="24" y="464" class="axis">04</text>
+  <text x="57" y="465" class="category">Initial risk matching</text>
+  <text x="576" y="465" class="number" text-anchor="end">5.1% &#8594; 4.7%</text>
+  <text x="24" y="492" class="note">Outage false stops: errors to joint; match inconclusive</text>
+  <text x="24" y="519" class="direction">Lower is better</text>
+  <text x="179" y="519" class="axis">0</text>
+  <rect x="200" y="507" width="237" height="12" rx="3" class="track"/>
+  <rect x="200" y="507" width="185.65" height="12" rx="3" class="series"/>
+  <line x1="401.45" y1="504" x2="401.45" y2="522" class="marker"/>
+  <text x="576" y="519" class="axis" text-anchor="end">6%</text>
+  <line x1="24" y1="531" x2="576" y2="531" class="grid"/>
+  <text x="24" y="556" class="axis">05</text>
+  <text x="57" y="557" class="category">Risk confirmation</text>
+  <text x="576" y="557" class="number" text-anchor="end">28 &#8594; 2,791</text>
+  <text x="24" y="584" class="note">Latency faults: errors to joint at comparable risk</text>
+  <text x="24" y="611" class="direction">Higher is better</text>
+  <text x="179" y="611" class="axis">0</text>
+  <rect x="200" y="599" width="237" height="12" rx="3" class="track"/>
+  <rect x="200" y="599" width="220.489" height="12" rx="3" class="series"/>
+  <line x1="202.212" y1="596" x2="202.212" y2="614" class="marker"/>
+  <text x="576" y="611" class="axis" text-anchor="end">3,000 trials</text>
+  <line x1="24" y1="623" x2="576" y2="623" class="grid"/>
+  <text x="24" y="648" class="axis">06</text>
+  <text x="57" y="649" class="category">Rollout impact</text>
+  <text x="576" y="649" class="number" text-anchor="end">30.189 &#8594; 20.682</text>
+  <text x="24" y="676" class="note">Added slows per latency fault: errors to joint</text>
+  <text x="24" y="703" class="direction">Lower is better</text>
+  <text x="179" y="703" class="axis">0</text>
+  <rect x="200" y="691" width="237" height="12" rx="3" class="track"/>
+  <rect x="200" y="691" width="122.541" height="12" rx="3" class="series"/>
+  <line x1="378.87" y1="688" x2="378.87" y2="706" class="marker"/>
+  <text x="576" y="703" class="axis" text-anchor="end">40 responses</text>
+  <line x1="24" y1="715" x2="576" y2="715" class="grid"/>
+  <text x="24" y="743" class="category">Staging and replay</text>
+  <line x1="24" y1="754" x2="576" y2="754" class="grid"/>
+  <text x="24" y="784" class="axis">07</text>
+  <text x="57" y="785" class="category">Fixed-step rollout</text>
+  <text x="576" y="785" class="number" text-anchor="end">152 / 200</text>
+  <text x="24" y="812" class="note">Healthy runs promoted; baseline capability</text>
+  <text x="24" y="839" class="direction">Higher is better</text>
+  <text x="179" y="839" class="axis">0</text>
+  <rect x="200" y="827" width="237" height="12" rx="3" class="track"/>
+  <rect x="200" y="827" width="180.12" height="12" rx="3" class="series"/>
+  <text x="576" y="839" class="axis" text-anchor="end">200 trials</text>
+  <line x1="24" y1="851" x2="576" y2="851" class="grid"/>
+  <text x="24" y="876" class="axis">08</text>
+  <text x="57" y="877" class="category">Adaptive middle stage</text>
+  <text x="576" y="877" class="number" text-anchor="end">154 &#8594; 155</text>
+  <text x="24" y="904" class="note">Healthy runs promoted: fixed to adaptive</text>
+  <text x="24" y="931" class="direction">Higher is better</text>
+  <text x="179" y="931" class="axis">0</text>
+  <rect x="200" y="919" width="237" height="12" rx="3" class="track"/>
+  <rect x="200" y="919" width="183.675" height="12" rx="3" class="series"/>
+  <line x1="382.49" y1="916" x2="382.49" y2="934" class="marker"/>
+  <text x="576" y="931" class="axis" text-anchor="end">200 trials</text>
+  <line x1="24" y1="943" x2="576" y2="943" class="grid"/>
+  <text x="24" y="968" class="axis">09</text>
+  <text x="57" y="969" class="category">Staged risk</text>
+  <text x="576" y="969" class="number" text-anchor="end">768.8 &#8594; 1,011.8</text>
+  <text x="24" y="996" class="note">Share-triggered exposure: fixed to adaptive</text>
+  <text x="24" y="1023" class="direction">Lower is better</text>
+  <text x="179" y="1023" class="axis">0</text>
+  <rect x="200" y="1011" width="237" height="12" rx="3" class="track"/>
+  <rect x="200" y="1011" width="199.83" height="12" rx="3" class="series"/>
+  <line x1="351.83799999999997" y1="1008" x2="351.83799999999997" y2="1026" class="marker"/>
+  <text x="576" y="1023" class="axis" text-anchor="end">1,200 sends</text>
+  <line x1="24" y1="1035" x2="576" y2="1035" class="grid"/>
+  <text x="24" y="1060" class="axis">10</text>
+  <text x="57" y="1061" class="category">Recorded-trace replay</text>
+  <text x="576" y="1061" class="number" text-anchor="end">6 / 6</text>
+  <text x="24" y="1088" class="note">Modeled slowdowns caught on recorded timings</text>
+  <text x="24" y="1115" class="direction">Higher is better</text>
+  <text x="179" y="1115" class="axis">0</text>
+  <rect x="200" y="1103" width="237" height="12" rx="3" class="track"/>
+  <rect x="200" y="1103" width="237" height="12" rx="3" class="series"/>
+  <text x="576" y="1115" class="axis" text-anchor="end">6 traces</text>
+  <line x1="24" y1="1127" x2="576" y2="1127" class="grid"/>
+  <text x="24" y="1155" class="category">Regional guardrails</text>
+  <line x1="24" y1="1166" x2="576" y2="1166" class="grid"/>
+  <text x="24" y="1196" class="axis">11</text>
+  <text x="57" y="1197" class="category">Regional traffic mix</text>
+  <text x="576" y="1197" class="number" text-anchor="end">673 &#8594; 2,000</text>
+  <text x="24" y="1224" class="note">Skewed outage, no false stop: pooled to adjusted</text>
+  <text x="24" y="1251" class="direction">Higher is better</text>
+  <text x="179" y="1251" class="axis">0</text>
+  <rect x="200" y="1239" width="237" height="12" rx="3" class="track"/>
+  <rect x="200" y="1239" width="237" height="12" rx="3" class="series"/>
+  <line x1="279.751" y1="1236" x2="279.751" y2="1254" class="marker"/>
+  <text x="576" y="1251" class="axis" text-anchor="end">2,000 trials</text>
+  <line x1="24" y1="1263" x2="576" y2="1263" class="grid"/>
+  <text x="24" y="1288" class="axis">12</text>
+  <text x="57" y="1289" class="category">Regional triggers</text>
+  <text x="576" y="1289" class="number" text-anchor="end">993 &#8594; 2,867</text>
+  <text x="24" y="1316" class="note">Local faults: overall to joint; risk not matched</text>
+  <text x="24" y="1343" class="direction">Higher is better</text>
+  <text x="179" y="1343" class="axis">0</text>
+  <rect x="200" y="1331" width="237" height="12" rx="3" class="track"/>
+  <rect x="200" y="1331" width="226.493" height="12" rx="3" class="series"/>
+  <line x1="278.447" y1="1328" x2="278.447" y2="1346" class="marker"/>
+  <text x="576" y="1343" class="axis" text-anchor="end">3,000 trials</text>
+  <line x1="24" y1="1355" x2="576" y2="1355" class="grid"/>
+  <text x="24" y="1380" class="axis">13</text>
+  <text x="57" y="1381" class="category">Regional precision</text>
+  <text x="576" y="1381" class="number" text-anchor="end">1,041 &#8594; 2,933</text>
+  <text x="24" y="1408" class="note">Local faults: overall to joint at comparable risk</text>
+  <text x="24" y="1435" class="direction">Higher is better</text>
+  <text x="179" y="1435" class="axis">0</text>
+  <rect x="200" y="1423" width="237" height="12" rx="3" class="track"/>
+  <rect x="200" y="1423" width="231.707" height="12" rx="3" class="series"/>
+  <line x1="282.23900000000003" y1="1420" x2="282.23900000000003" y2="1438" class="marker"/>
+  <text x="576" y="1435" class="axis" text-anchor="end">3,000 trials</text>
+  <line x1="24" y1="1447" x2="576" y2="1447" class="grid"/>
+  <text x="24" y="1475" class="category">Research extensions</text>
+  <line x1="24" y1="1486" x2="576" y2="1486" class="grid"/>
+  <text x="24" y="1516" class="axis">14</text>
+  <text x="57" y="1517" class="category">Lindon adjustment</text>
+  <text x="576" y="1517" class="number" text-anchor="end">14.19 &#8594; 2.63</text>
+  <text x="24" y="1544" class="note">Predictive attribute: mean looks, unadjusted to adjusted</text>
+  <text x="24" y="1571" class="direction">Lower is better</text>
+  <text x="179" y="1571" class="axis">0</text>
+  <rect x="200" y="1559" width="237" height="12" rx="3" class="track"/>
+  <rect x="200" y="1559" width="29.681" height="12" rx="3" class="series"/>
+  <line x1="360.144" y1="1556" x2="360.144" y2="1574" class="marker"/>
+  <text x="576" y="1571" class="axis" text-anchor="end">21 looks</text>
+  <line x1="24" y1="1583" x2="576" y2="1583" class="grid"/>
+  <text x="24" y="1608" class="axis">15</text>
+  <text x="57" y="1609" class="category">Shao state-space</text>
+  <text x="576" y="1609" class="number" text-anchor="end">1.777 &#8594; 9.183 ms</text>
+  <text x="24" y="1636" class="note">RMSE after sudden shift: plain to smoothed</text>
+  <text x="24" y="1663" class="direction">Lower is better</text>
+  <text x="179" y="1663" class="axis">0</text>
+  <rect x="200" y="1651" width="237" height="12" rx="3" class="track"/>
+  <rect x="200" y="1651" width="217.637" height="12" rx="3" class="series"/>
+  <line x1="242.115" y1="1648" x2="242.115" y2="1666" class="marker"/>
+  <text x="576" y="1663" class="axis" text-anchor="end">10 ms</text>
+  <line x1="24" y1="1675" x2="576" y2="1675" class="grid"/>
+</svg>

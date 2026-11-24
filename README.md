@@ -34,6 +34,21 @@ too few outcomes arrive by the simulated telemetry deadline.
 - [Averages can hide local harm.](docs/regional-risk.md)
   Adding a regional trigger caught more local regressions, but the
   fitted rules' false-rollback rates were not comparable across scenarios.
+  [Adjusting for sample precision](docs/regional-precision.md) brought the
+  rates within the declared margin across the three modeled scenarios.
+
+![Faults detected by the error-only and joint guardrails at comparable modeled false-rollback risk](docs/charts/fault-detection.svg)
+
+<details>
+<summary>Results from all 15 studies</summary>
+
+Each row has its own metric and scale. The tick marks the comparator where
+there is one; the bar shows the study result. The labels say which direction
+is better, including cases where the addition did not improve the result.
+
+![Fifteen Mihari study results with comparator ticks and higher-or-lower guidance](docs/charts/study-scorecard.svg)
+
+</details>
 
 The benchmarks use simulations. The [recorded-trace replay](docs/recorded-traces.md)
 uses measured timings from six testbed recordings, with simulated canary

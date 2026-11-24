@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="512" viewBox="0 0 600 512" role="img" aria-labelledby="faults-title faults-desc">
+  <title id="faults-title">Fault detection at comparable false-rollback risk</title>
+  <desc id="faults-desc">Error-only versus joint: Error-only fault 2,485 versus 1,746; Latency-only fault 28 versus 2,791; Combined fault 2,485 versus 2,875. Each case has 3,000 simulated rollouts.</desc>
+  <style>
+    svg { --surface:#fff; --ink:#172235; --muted:#4d596b; --grid:#d6dee9; --track:#e7edf4; --series:#245cdc; --joint:#a84315; }
+    @media (prefers-color-scheme: dark) {
+      svg { --surface:#141a24; --ink:#f3f6fb; --muted:#b9c6d8; --grid:#435065; --track:#2b3749; --series:#83aaff; --joint:#ffad78; }
+    }
+    text { font-family: system-ui, "Segoe UI", sans-serif; fill:var(--ink); font-variant-numeric:tabular-nums; }
+    .heading { font-size:29px; font-weight:700; }
+    .category { font-size:23px; font-weight:650; }
+    .number { font-size:22px; font-weight:650; }
+    .note { font-size:19px; fill:var(--muted); }
+    .axis { font-size:18px; fill:var(--muted); }
+    .direction { font-size:19px; font-weight:600; }
+    .surface { fill:var(--surface); }
+    .grid { stroke:var(--grid); stroke-width:1; }
+    .marker { stroke:var(--ink); stroke-width:3; }
+    .track { fill:var(--track); }
+    .series { fill:var(--series); }
+    .joint { fill:var(--joint); }
+  </style>
+  <rect x="0" y="0" width="600" height="512" rx="8" class="surface"/>
+  <text x="24" y="44" class="heading">Which faults did each guardrail catch?</text>
+  <text x="24" y="75" class="note">Held-out simulation, with comparable false-rollback risk</text>
+  <rect x="24" y="99" width="16" height="14" rx="3" class="series"/>
+  <text x="48" y="112" class="note">Error-only rule</text>
+  <rect x="239" y="99" width="16" height="14" rx="3" class="joint"/>
+  <text x="263" y="112" class="note">Joint error + latency rule</text>
+  <text x="24" y="153" class="category">Error-only fault</text>
+  <rect x="24" y="166" width="454" height="22" rx="3" class="track"/>
+  <rect x="24" y="166" width="376.063" height="22" rx="2" class="series"/>
+  <text x="576" y="185" class="number" text-anchor="end">2,485</text>
+  <rect x="24" y="196" width="454" height="22" rx="3" class="track"/>
+  <rect x="24" y="196" width="264.228" height="22" rx="2" class="joint"/>
+  <text x="576" y="215" class="number" text-anchor="end">1,746</text>
+  <text x="24" y="253" class="category">Latency-only fault</text>
+  <rect x="24" y="266" width="454" height="22" rx="3" class="track"/>
+  <rect x="24" y="266" width="4.237" height="22" rx="2" class="series"/>
+  <text x="576" y="285" class="number" text-anchor="end">28</text>
+  <rect x="24" y="296" width="454" height="22" rx="3" class="track"/>
+  <rect x="24" y="296" width="422.371" height="22" rx="2" class="joint"/>
+  <text x="576" y="315" class="number" text-anchor="end">2,791</text>
+  <text x="24" y="353" class="category">Combined fault</text>
+  <rect x="24" y="366" width="454" height="22" rx="3" class="track"/>
+  <rect x="24" y="366" width="376.063" height="22" rx="2" class="series"/>
+  <text x="576" y="385" class="number" text-anchor="end">2,485</text>
+  <rect x="24" y="396" width="454" height="22" rx="3" class="track"/>
+  <rect x="24" y="396" width="435.083" height="22" rx="2" class="joint"/>
+  <text x="576" y="415" class="number" text-anchor="end">2,875</text>
+  <line x1="24" y1="433" x2="478" y2="433" class="grid"/>
+  <line x1="24" y1="433" x2="24" y2="440" class="grid"/>
+  <text x="24" y="460" class="axis">0</text>
+  <line x1="175.333" y1="433" x2="175.333" y2="440" class="grid"/>
+  <text x="175.333" y="460" class="axis" text-anchor="middle">1,000</text>
+  <line x1="326.667" y1="433" x2="326.667" y2="440" class="grid"/>
+  <text x="326.667" y="460" class="axis" text-anchor="middle">2,000</text>
+  <line x1="478" y1="433" x2="478" y2="440" class="grid"/>
+  <text x="478" y="460" class="axis" text-anchor="middle">3,000</text>
+  <text x="24" y="492" class="note">Detected rollouts (higher is better; 3,000 per fault)</text>
+</svg>
