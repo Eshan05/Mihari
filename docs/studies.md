@@ -45,6 +45,10 @@ The [regional risk study](regional-risk.md) tests whether an explicit regional t
 
 The [regional precision study](regional-precision.md) adjusts for unequal sample sizes and checks the same risk margin on a fresh holdout. Run `python -m mihari.regional_precision --timeline` to see the fitted decisions.
 
+## Regression adjustment
+
+The [Lindon adjustment study](lindon-adjustment.md) tests whether a pre-routing attribute helps detect canary latency regressions sooner on the same randomized traffic. Run `python -m mihari.lindon_adjustment --timeline` for the side-by-side decision trace.
+
 ## Original benchmark
 Baseline error rate 2%, 500 requests per arm per look, up to 20 looks, 20,000 simulated rollouts per cell, one-sided alpha 0.05. Rules: fixed horizon (test once at the end), naive peeking (z > 1.645 at every look), a constant boundary and an O'Brien-Fleming-style boundary (both calibrated by simulation on separate runs to 5% false rollbacks), an always-valid mixture SPRT, and an SPRT against a known baseline.
 
