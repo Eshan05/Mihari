@@ -43,6 +43,8 @@ meets a 5% held-out cap. Under shared degradation, the observed rates were
 
 ## Faults at comparable modeled risk
 
+![Faults detected by the error-only and joint guardrails at comparable modeled false-rollback risk](charts/fault-detection.svg)
+
 | Fault | Rule | Detected / 3,000 | Missed (pre-fault stops) | Mean delay (ticks) | Mean affected canary sends |
 | --- | --- | ---: | ---: | ---: | ---: |
 | Error only | Error-only | 2,485 | 515 (13) | 5.57 | 120.9 |
