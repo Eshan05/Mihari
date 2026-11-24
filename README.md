@@ -36,8 +36,11 @@ too few outcomes arrive by the simulated telemetry deadline.
   fitted rules' false-rollback rates were not comparable across scenarios.
   [Adjusting for sample precision](docs/regional-precision.md) brought the
   rates within the declared margin across the three modeled scenarios.
+- [An early SLO hold can miss the recovery.](docs/slo-gate.md) It held four ticks sooner
+  during a sustained shared outage, but blocked 219 of 1,000 rollouts that the
+  checkpoint-only policy promoted after a short outage recovered.
 
-## Results from all 15 studies
+## 15-study scorecard
 
 Each row has its own metric and scale. The tick marks the comparator where
 there is one; the bar shows the study result. The labels say which direction

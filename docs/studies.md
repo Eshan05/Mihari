@@ -35,6 +35,8 @@ The [adaptive-share study](adaptive-steps.md) changes just the middle traffic sh
 
 The [staged-risk study](staged-risk.md) compares those same schedules on a slowdown that starts at the same tick and one that starts only at higher traffic shares. Run `python -m mihari.staged_risk --timeline` to see why the distinction matters.
 
+The [SLO gate study](slo-gate.md) adds an early health hold to the fixed stages. It measures the tradeoff between stopping sooner during sustained shared degradation and interrupting rollouts after a short outage has recovered. Run `python -m mihari.slo_gate --timeline all`.
+
 ## Recorded traffic and regional effects
 
 The [recorded-trace replay](recorded-traces.md) applies the latency guardrail to six Online Boutique testbed recordings, first unchanged and then with a modeled canary slowdown. It uses recorded durations, not actual deployment labels.

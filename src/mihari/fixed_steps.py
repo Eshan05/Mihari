@@ -131,7 +131,7 @@ def checkpoint(evidence: Evidence, *, final: bool) -> tuple[str, str]:
 
 
 def timeline(scenario: str, seed: int, *, scripted: bool = False, window_source=None,
-             choose_middle=None, stage_harm=None):
+             choose_middle=None, stage_harm=None, health_gate=None):
     if scenario not in SCENARIOS:
         raise ValueError(f"Unknown rollout scenario: {scenario}")
     if stage_harm is not None and window_source is None:
@@ -165,9 +165,10 @@ def timeline(scenario: str, seed: int, *, scripted: bool = False, window_source=
             elif offset >= GRACE:
                 reason = "waiting for fixed checkpoint"
             trigger = None
-            if offset >= GRACE:
+            closed = offset - GRACE + 1
+            if closed > 0:
                 # A window contributes only once, when its evidence deadline arrives.
-                observed = pending[offset - GRACE]
+                observed = pending[closed - 1]
                 stage += observed
                 c, v = observed.control, observed.canary
                 look = Look(offset - GRACE, tick, c.seen, v.seen, c.errors, v.errors, c.slow,
@@ -175,6 +176,10 @@ def timeline(scenario: str, seed: int, *, scripted: bool = False, window_source=
                 trigger = guardrail.update(look).trigger("joint", ROLLBACK_CUTOFF)
             if trigger is not None:
                 action, reason, terminal = "ROLLBACK", f"joint guardrail: {trigger}", True
+            elif health_gate is not None and closed > 0 and (
+                hold_reason := health_gate(tuple(pending[:closed]))
+            ) is not None:
+                action, reason, terminal = "HOLD", hold_reason, True
             elif offset == WINDOWS + GRACE - 1:
                 action, reason = checkpoint(stage, final=share == SHARES[-1])
                 terminal = action != "ADVANCE"
