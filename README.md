@@ -43,7 +43,9 @@ Each row has its own metric and scale. The tick marks the comparator where
 there is one; the bar shows the study result. The labels say which direction
 is better, including cases where the addition did not improve the result.
 
-[![Fifteen Mihari study results with comparator ticks and higher-or-lower guidance](docs/charts/study-scorecard.svg)](docs/charts/study-scorecard.svg)
+![Fifteen Mihari study results with comparator ticks and higher-or-lower guidance](docs/charts/study-scorecard.png)
+
+[Full-size vector scorecard](docs/charts/study-scorecard.svg)
 
 The benchmarks use simulations. The [recorded-trace replay](docs/recorded-traces.md)
 uses measured timings from six testbed recordings, with simulated canary
