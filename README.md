@@ -43,7 +43,13 @@ Each row has its own metric and scale. The tick marks the comparator where
 there is one; the bar shows the study result. The labels say which direction
 is better, including cases where the addition did not improve the result.
 
-![Fifteen Mihari study results with comparator ticks and higher-or-lower guidance](docs/charts/study-scorecard.png)
+![Studies 1 to 6: rollback and impact](docs/charts/study-scorecard-rollback.png)
+
+![Studies 7 to 10: staging and replay](docs/charts/study-scorecard-staging.png)
+
+![Studies 11 to 13: regional guardrails](docs/charts/study-scorecard-regional.png)
+
+![Studies 14 to 15: research extensions](docs/charts/study-scorecard-research.png)
 
 [Full-size vector scorecard](docs/charts/study-scorecard.svg)
 
